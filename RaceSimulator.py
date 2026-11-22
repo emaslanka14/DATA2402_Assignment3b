@@ -147,6 +147,9 @@ def find_best_strategy(simulator:RaceSimulator):
                 bestTime = totalTime
                 bestStrategy = (pitStops, tireTypes)
 
+    if bestStrategy is None:
+        raise RuntimeError("No valid race strategy found.")
+
     print(
     f"Best strategy found ({bestTime:.2f}s added)! "
     f"Pitstops at laps: {' and '.join(str(lap) for lap in bestStrategy[0])} "
