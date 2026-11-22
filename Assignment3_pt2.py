@@ -47,26 +47,49 @@ class RaceSimulator:
 
 
 def plot_tires(simulator):
-    ages = np.arange(0, 60)
+    ages = np.arange(0, 61)
 
     for name in simulator.tires.index:
         p = simulator.tires.loc[name]
-        times = simulator.tire_time(ages, p['Tmax'], p['Tmin'], p['alpha'], p['beta'])
+        times = simulator.tire_time(ages, p['Tmin'], p['Tmax'], p['alpha'], p['beta'])
         plt.plot(ages, times, label=name)
 
-    plt.xlabel()
+    plt.xlabel('Tire Age')
+    plt.ylabel('Time added (s)')
+    plt.title('Tire Degradation')
+    plt.legend()
+    plt.show()
 
 
 
 def find_best_strategy(simulator):
-    """
-    Test all valid race strategies and find the one
-    with the minimum total time added.
+    total_laps = 60
+    compounds = list(simulator.tires.index)
 
-    Parameters:
-        simulator: A RaceSimulator object.
+    tire_options = set(combinations(compounds * 3, 3))
 
-    Returns:
-        The strategy with the lowest total tire and pit time.
-    """
-    pass
+    best_time = float('inf')
+    best_strategy = None
+
+    for pits in combinations(range(2, 61), 2):
+        stint_lengths = np.diff([1, *pits, total_laps +1])
+
+        for tire_seq in tire_options:
+            if len(set(tire_seq)) < 2:
+                   continue
+
+            total = simulator.simulate(stint_lengths, tire_seq)
+
+            if total < best_time:
+                best_time = total
+                best_strategy = (pits, tire_seq)
+
+    return best_strategy, best_time
+
+sim = RaceSimulator()
+strategy, best = find_best_strategy(sim)
+print(strategy, best)
+
+#print(sim.simulate([14, 8, 38], ["Soft", "Medium", "Hard"]))
+
+#plot_tires(sim)  
