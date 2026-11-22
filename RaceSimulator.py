@@ -40,7 +40,7 @@ class RaceSimulator:
         time_added = Tmin + (Tmax - Tmin) / (1 + np.exp(-alpha*(age-beta)))
         return time_added
 
-    def simulate(self, pitstops=[15,23], tireTypes=['Soft', 'Medium', 'Hard']):
+    def simulate(self, pitstops, tireTypes):
         """
         Simulate a complete race strategy.
 
@@ -54,7 +54,7 @@ class RaceSimulator:
         if len(pitstops) < 2:
             raise ValueError("At least two pitstops are required for a valid race strategy.")
 
-        if any(lap > self.max_laps for lap in pitstops):
+        if any((lap > self.max_laps) or lap < 0 for lap in pitstops):
             raise ValueError("Pitstop lap numbers cannot exceed the maximum number of laps in the race.")
 
         if not all(tire in self.tires.index for tire in tireTypes):
@@ -65,7 +65,7 @@ class RaceSimulator:
 
         pitstops = sorted(pitstops)
         stints = []
-        boundaries = [0] + pitstops + [self.max_laps]
+        boundaries = [1] + pitstops + [self.max_laps + 1]
         stint_lengths = [end - start for start, end in zip(boundaries[:-1], boundaries[1:])] #Calculate how many laps are in each stint
 
         lapTuples = list(zip(stint_lengths, tireTypes))
@@ -75,10 +75,7 @@ class RaceSimulator:
 
             #print(f"Simulating stint {i+1}: {length} laps on {tire} tires")
             
-            if(i == 0):
-                stintStart = 1
-            else:
-                stintStart = pitstops[i-1]+1
+            stintStart = 1 if i == 0 else pitstops[i - 1]
             
             df = pd.DataFrame()
             df['age'] = np.arange(0, length)
@@ -92,6 +89,7 @@ class RaceSimulator:
             stints.append(df)
 
         race = pd.concat(stints, ignore_index=True)
+
         return race['tire_time'].sum() + race['pit_time'].sum()
 
 
